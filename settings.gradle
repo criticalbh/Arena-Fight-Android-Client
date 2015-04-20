@@ -1,1 +1,3 @@
 include ':app'
+include ':libs:andengine'
+include ':libs:andenginebox2d'
