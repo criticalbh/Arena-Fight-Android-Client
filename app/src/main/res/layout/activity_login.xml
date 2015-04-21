@@ -20,7 +20,7 @@
         android:inputType="textPersonName"
         android:hint="Name"
         android:ems="10"
-        android:id="@+id/editText"
+        android:id="@+id/txtUsername"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="49dp" />
@@ -31,7 +31,7 @@
         android:inputType="textPassword"
         android:ems="10"
         android:hint="******"
-        android:id="@+id/editText2"
+        android:id="@+id/txtPassword"
         android:layout_centerVertical="true"
-        android:layout_alignStart="@+id/editText" />
+        android:layout_alignStart="@+id/txtUsername" />
 </RelativeLayout>

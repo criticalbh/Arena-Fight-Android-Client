@@ -1,41 +1,84 @@
+
 package info.admirsabanovic.arenafight;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+
+import com.github.nkzawa.emitter.Emitter;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import info.admirsabanovic.arenafight.tcp.SocketIO;
 
 
-public class LoginActivity extends ActionBarActivity {
+public class LoginActivity extends Activity {
+
+    EditText    Username;
+    EditText    Password;
+    Button      LoginBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+//        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
+
+        SocketIO.getInstance().connect();
+        SocketIO.getInstance().on("loginResponse", loginResponse);
+        //
+        Username = (EditText) findViewById(R.id.txtUsername);
+        Password = (EditText) findViewById(R.id.txtPassword);
+        LoginBtn = (Button) findViewById(R.id.btnLogin);
+
+        LoginBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SocketIO.getInstance().emit("login",
+                        Username.getText().toString(),
+                        Password.getText().toString());
+            }
+        });
+
+
     }
 
+    private Emitter.Listener loginResponse = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    JSONObject data = (JSONObject) args[0];
+                    /*int id;
+                    int numUsers;
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_login, menu);
-        return true;
-    }
+                    int race;
+                    int u_class;
+                    String username;*/
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+                    try {
+                        boolean first_login;
+                        first_login = data.getBoolean("first_login");
+                        if(first_login == true){
+                            //parsing JSONObject obj = new JSONObject(getIntent().getStringExtra("json"));
+                            Intent intent = new Intent(LoginActivity.this, ChooseRaceActivity.class);
+                            intent.putExtra("json", data.toString());
+                            startActivity(intent);
+                        }else{
+                            //@TODO go to main menu
+                        }
+                    } catch (JSONException e) {
+                        return;
+                    }
+                }
+            });
         }
-
-        return super.onOptionsItemSelected(item);
-    }
+    };
 }

@@ -23,6 +23,5 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:22.0.0'
-    compile project(':libs:andenginebox2d')
-    compile project(':libs:andengine')
+    compile 'com.github.nkzawa:socket.io-client:0.3.0'
 }
