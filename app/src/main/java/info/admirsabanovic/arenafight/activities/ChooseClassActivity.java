@@ -1,4 +1,4 @@
-package info.admirsabanovic.arenafight;
+package info.admirsabanovic.arenafight.activities;
 
 import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
@@ -10,6 +10,8 @@ import android.widget.Button;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import info.admirsabanovic.arenafight.R;
 
 
 public class ChooseClassActivity extends ActionBarActivity {

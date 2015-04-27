@@ -1,4 +1,4 @@
-package info.admirsabanovic.arenafight;
+package info.admirsabanovic.arenafight.activities;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -8,6 +8,8 @@ import android.widget.Button;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import info.admirsabanovic.arenafight.R;
 
 public class ChooseRaceActivity extends Activity {
 
