@@ -26,6 +26,10 @@
             android:name=".activities.ChooseClassActivity"
             android:label="@string/title_activity_choose_class" >
         </activity>
+        <activity
+            android:name=".activities.HomeActivity"
+            android:label="@string/title_activity_home" >
+        </activity>
     </application>
 
 </manifest>

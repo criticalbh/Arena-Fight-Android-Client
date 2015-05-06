@@ -55,7 +55,7 @@ public class ChooseRaceActivity extends Activity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        intent.putExtra("race", obj.toString());
+        intent.putExtra("json", obj.toString());
         startActivity(intent);
     }
 }

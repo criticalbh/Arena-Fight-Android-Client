@@ -1,10 +1,8 @@
 package info.admirsabanovic.arenafight.activities;
 
+import android.app.Activity;
 import android.content.Intent;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
@@ -12,9 +10,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import info.admirsabanovic.arenafight.R;
+import info.admirsabanovic.arenafight.tcp.SocketIO;
 
 
-public class ChooseClassActivity extends ActionBarActivity {
+public class ChooseClassActivity extends Activity {
 
 
     Button btnMage;
@@ -24,6 +23,12 @@ public class ChooseClassActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_choose_class);
+
+        try {
+            obj = new JSONObject(getIntent().getStringExtra("json"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
         btnMage = (Button) findViewById(R.id.btnMage);
         btnWar = (Button) findViewById(R.id.btnWar);
@@ -44,16 +49,23 @@ public class ChooseClassActivity extends ActionBarActivity {
             }
         }
     };
+
+    private void savePlayer(){
+        SocketIO.getInstance().emit("savePlayer", obj);
+    }
+
     private void goToHome(int u_class){
-//        Intent intent = new Intent(this, HomeActivity.class);
-//        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION);
-//        obj.remove("class");
-//        try {
-//            obj.put("class", u_class);
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-//        intent.putExtra("json", obj.toString());
-//        startActivity(intent);
+        Intent intent = new Intent(this, HomeActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        obj.remove("class");
+        try {
+            obj.put("class", u_class);
+            obj.put("first_login", false);
+            savePlayer();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        intent.putExtra("json", obj.toString());
+        startActivity(intent);
     }
 }
