@@ -3,7 +3,10 @@ package info.admirsabanovic.arenafight.handler;
 import android.content.Context;
 import com.github.nkzawa.emitter.Emitter;
 
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import info.admirsabanovic.arenafight.activities.HomeActivity;
 
 /**
  * Created by critical on 4/27/15.
@@ -31,7 +34,16 @@ public class SocketListener {
                 public void run() {
                     JSONObject data = (JSONObject) args[0];
                     if(_context != null && _event.equals("newActivity")){
-                        EventExecutor.startNewActivityEvent(_context, _newActivity, data);
+                        try {
+                            boolean first_login = data.getBoolean("first_login");
+                            if(first_login == false){
+                                EventExecutor.startNewActivityEvent(_context, HomeActivity.class, data);
+                            }else{
+                                EventExecutor.startNewActivityEvent(_context, _newActivity, data);
+                            }
+                        } catch (JSONException e) {
+                            return;
+                        }
                     }
                 }
             }).start();
