@@ -1,8 +1,9 @@
 package info.admirsabanovic.arenafight.activities;
 
-import android.support.v7.app.ActionBarActivity;
+import android.app.Activity;
 import android.os.Bundle;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.json.JSONException;
@@ -13,16 +14,18 @@ import java.util.Map;
 
 import info.admirsabanovic.arenafight.R;
 
-public class HomeActivity extends ActionBarActivity {
+public class HomeActivity extends Activity {
 
     TextView onlinePlayers;
     JSONObject obj;
     Map<String, Integer> characterImageMap;
     ImageView characterHolder;
+    ProgressBar healthBar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        initialResources();
         try {
             obj = new JSONObject(getIntent().getStringExtra("json"));
             updateWorldStatistics(obj);
@@ -40,11 +43,12 @@ public class HomeActivity extends ActionBarActivity {
         characterImageMap.put("orcmage", R.drawable.orcmage);
         characterImageMap.put("orcwarrior", R.drawable.orcwarrior);
         characterHolder = (ImageView)findViewById(R.id.characterHolder);
+        healthBar = (ProgressBar)findViewById(R.id.healthBar);
     }
 
     void updateWorldStatistics(JSONObject data) throws JSONException {
         int numberOnlinePlayers = data.getInt("numUsers");
-        onlinePlayers.setText(numberOnlinePlayers);
+        onlinePlayers.setText(String.valueOf(numberOnlinePlayers));
         int race = data.getInt("race");
         int clas = data.getInt("class");
         setCharacterHolder(race, clas);
