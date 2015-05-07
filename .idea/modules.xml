@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/ArenaFight.iml" filepath="$PROJECT_DIR$/ArenaFight.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Hadji-Arena-Fight-Android-Client.iml" filepath="$PROJECT_DIR$/Hadji-Arena-Fight-Android-Client.iml" />
       <module fileurl="file://$PROJECT_DIR$/libs/andengine/andengine.iml" filepath="$PROJECT_DIR$/libs/andengine/andengine.iml" />
       <module fileurl="file://$PROJECT_DIR$/libs/andenginebox2d/andenginebox2d.iml" filepath="$PROJECT_DIR$/libs/andenginebox2d/andenginebox2d.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />

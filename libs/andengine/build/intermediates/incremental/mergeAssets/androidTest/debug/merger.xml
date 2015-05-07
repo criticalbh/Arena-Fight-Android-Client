@@ -1,2 +1,2 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merger version="3"><dataSet config="debug"><source path="/home/critical/AndroidStudioProjects/ArenaFight/libs/andengine/build/intermediates/bundles/debug/assets"/></dataSet><dataSet config="main"><source path="/home/critical/AndroidStudioProjects/ArenaFight/libs/andengine/src/androidTest/assets"/></dataSet></merger>
+<merger version="3"><dataSet config="debug"><source path="/home/critical/AndroidStudioProjects/Hadji-Arena-Fight-Android-Client/libs/andengine/build/intermediates/bundles/debug/assets"/></dataSet><dataSet config="main"><source path="/home/critical/AndroidStudioProjects/Hadji-Arena-Fight-Android-Client/libs/andengine/src/androidTest/assets"/></dataSet></merger>
