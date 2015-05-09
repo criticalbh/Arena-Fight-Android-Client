@@ -1,7 +1,10 @@
 package info.admirsabanovic.arenafight.activities;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -21,6 +24,7 @@ public class HomeActivity extends Activity {
     Map<String, Integer> characterImageMap;
     ImageView characterHolder;
     ProgressBar healthBar;
+    Button btnPlay;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,6 +36,14 @@ public class HomeActivity extends Activity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
+        btnPlay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), GameActivity.class);
+                startActivity(intent);
+            }
+        });
     }
     //1 human 2 orc
     //1 mage 2 warrior
@@ -44,6 +56,7 @@ public class HomeActivity extends Activity {
         characterImageMap.put("orcwarrior", R.drawable.orcwarrior);
         characterHolder = (ImageView)findViewById(R.id.characterHolder);
         healthBar = (ProgressBar)findViewById(R.id.healthBar);
+        btnPlay = (Button)findViewById(R.id.btnPlay);
     }
 
     void updateWorldStatistics(JSONObject data) throws JSONException {

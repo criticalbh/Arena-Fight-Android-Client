@@ -52,4 +52,12 @@
         android:layout_toEndOf="@+id/txtOnlinePlayers"
         android:indeterminate="false" />
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Play"
+        android:id="@+id/btnPlay"
+        android:layout_alignBottom="@+id/characterHolder"
+        android:layout_alignParentStart="true" />
+
 </RelativeLayout>
