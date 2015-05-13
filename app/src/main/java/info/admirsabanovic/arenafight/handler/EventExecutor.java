@@ -5,9 +5,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import org.json.JSONObject;
-
 import info.admirsabanovic.arenafight.activities.ChooseRaceActivity;
-
 /**
  * Created by critical on 4/27/15.
  */

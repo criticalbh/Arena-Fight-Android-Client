@@ -18,7 +18,7 @@ public class SocketIO {
     public static Socket getInstance() {
         if(mSocket == null) {
             try {
-                mSocket = IO.socket("http://192.168.0.115:3000/");
+                mSocket = IO.socket("http://192.168.3.137:3000/");
             } catch (URISyntaxException e) {}
         }
         return mSocket;
