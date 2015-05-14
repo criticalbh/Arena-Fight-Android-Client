@@ -1,6 +1,8 @@
 package info.admirsabanovic.arenafight.activities;
 
 
+import android.view.KeyEvent;
+
 import org.andengine.engine.Engine;
 import org.andengine.engine.LimitedFPSEngine;
 import org.andengine.engine.camera.Camera;
@@ -58,13 +60,27 @@ public class GameActivity extends BaseGameActivity
             public void onTimePassed(final TimerHandler pTimerHandler)
             {
                 mEngine.unregisterUpdateHandler(pTimerHandler);
-                // load menu resources, create menu scene
-                // set menu scene using scene manager
-                // disposeSplashScene();
-                // READ NEXT ARTICLE FOR THIS PART.
+                SceneManager.getInstance().createMenuScene();
             }
         }));
         pOnPopulateSceneCallback.onPopulateSceneFinished();
+    }
+
+    @Override
+    protected void onDestroy()
+    {
+        super.onDestroy();
+        System.exit(0);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event)
+    {
+        if (keyCode == KeyEvent.KEYCODE_BACK)
+        {
+            SceneManager.getInstance().getCurrentScene().onBackKeyPressed();
+        }
+        return false;
     }
 
 }
