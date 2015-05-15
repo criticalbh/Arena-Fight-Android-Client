@@ -9,6 +9,8 @@ import com.github.nkzawa.socketio.client.Socket;
 
 import java.net.URISyntaxException;
 
+import info.admirsabanovic.arenafight.app.Config;
+
 public class SocketIO {
     private static Socket mSocket = null;
 
@@ -18,7 +20,7 @@ public class SocketIO {
     public static Socket getInstance() {
         if(mSocket == null) {
             try {
-                mSocket = IO.socket("http://192.168.3.137/");
+                mSocket = IO.socket(Config.getConfig("host"));
             } catch (URISyntaxException e) {}
         }
         return mSocket;
