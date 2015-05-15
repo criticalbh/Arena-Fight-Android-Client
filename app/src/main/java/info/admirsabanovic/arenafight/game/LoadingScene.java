@@ -2,7 +2,7 @@ package info.admirsabanovic.arenafight.game;
 
 import org.andengine.entity.scene.background.Background;
 import org.andengine.entity.text.Text;
-import org.andengine.util.color.Color;
+import org.andengine.util.adt.color.Color;
 
 /**
  * Created by asabanovic on 5/14/15.

@@ -56,6 +56,15 @@ public class ResourcesManager
 
     private BuildableBitmapTextureAtlas menuTextureAtlas;
 
+    // Game Texture
+    public BuildableBitmapTextureAtlas gameTextureAtlas;
+
+    // Game Texture Regions
+    public ITextureRegion platform1_region;
+    public ITextureRegion platform2_region;
+    public ITextureRegion platform3_region;
+    public ITextureRegion coin_region;
+
     //---------------------------------------------
     // CLASS LOGIC
     //---------------------------------------------
@@ -120,7 +129,23 @@ public class ResourcesManager
 
     private void loadGameGraphics()
     {
+        BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/game/");
+        gameTextureAtlas = new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.BILINEAR);
 
+        platform1_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "platform1.png");
+        platform2_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "platform2.png");
+        platform3_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "platform3.png");
+        coin_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "coin.png");
+
+        try
+        {
+            this.gameTextureAtlas.build(new BlackPawnTextureAtlasBuilder<IBitmapTextureAtlasSource, BitmapTextureAtlas>(0, 1, 0));
+            this.gameTextureAtlas.load();
+        }
+        catch (final TextureAtlasBuilderException e)
+        {
+            Debug.e(e);
+        }
     }
 
     private void loadGameFonts()

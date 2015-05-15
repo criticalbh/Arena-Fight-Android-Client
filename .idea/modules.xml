@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/ArenaFight.iml" filepath="$PROJECT_DIR$/ArenaFight.iml" />
       <module fileurl="file://$PROJECT_DIR$/libs/andengine/andengine.iml" filepath="$PROJECT_DIR$/libs/andengine/andengine.iml" />
+      <module fileurl="file://$PROJECT_DIR$/libs/andengine/andengine.iml" filepath="$PROJECT_DIR$/libs/andengine/andengine.iml" />
       <module fileurl="file://$PROJECT_DIR$/libs/andenginebox2d/andenginebox2d.iml" filepath="$PROJECT_DIR$/libs/andenginebox2d/andenginebox2d.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/libs/libs.iml" filepath="$PROJECT_DIR$/libs/libs.iml" />
