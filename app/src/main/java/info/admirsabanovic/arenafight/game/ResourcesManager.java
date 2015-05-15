@@ -3,8 +3,13 @@ package info.admirsabanovic.arenafight.game;
 /**
  * Created by critical on 5/9/15.
  */
+import android.graphics.Color;
+
 import org.andengine.engine.Engine;
 import org.andengine.engine.camera.Camera;
+import org.andengine.opengl.font.Font;
+import org.andengine.opengl.font.FontFactory;
+import org.andengine.opengl.texture.ITexture;
 import org.andengine.opengl.texture.TextureOptions;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
@@ -39,6 +44,8 @@ public class ResourcesManager
     public ITextureRegion splash_region;
     private BitmapTextureAtlas splashTextureAtlas;
 
+    public Font font;
+
     //---------------------------------------------
     // TEXTURES & TEXTURE REGIONS
     //---------------------------------------------
@@ -53,10 +60,31 @@ public class ResourcesManager
     // CLASS LOGIC
     //---------------------------------------------
 
+
+    private void loadMenuFonts()
+    {
+        FontFactory.setAssetBasePath("font/");
+        final ITexture mainFontTexture = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+
+        font = FontFactory.createStrokeFromAsset(activity.getFontManager(), mainFontTexture, activity.getAssets(), "font.ttf", 50, true, Color.WHITE, 2, Color.BLACK);
+        font.load();
+    }
+
+    public void unloadMenuTextures()
+    {
+        menuTextureAtlas.unload();
+    }
+
+    public void loadMenuTextures()
+    {
+        menuTextureAtlas.load();
+    }
+
     public void loadMenuResources()
     {
         loadMenuGraphics();
         loadMenuAudio();
+        loadMenuFonts();
     }
 
     public void loadGameResources()
@@ -118,6 +146,13 @@ public class ResourcesManager
         splashTextureAtlas.unload();
         splash_region = null;
     }
+
+    public void unloadGameTextures()
+    {
+        // TODO (Since we did not create any textures for game scene yet)
+    }
+
+
 
     /**
      * @param engine
