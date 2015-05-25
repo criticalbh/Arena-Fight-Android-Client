@@ -67,6 +67,7 @@ public class ResourcesManager
     public ITextureRegion platform3_region;
     public ITextureRegion coin_region;
     public ITiledTextureRegion player_region;
+    public ITiledTextureRegion player2_region;
 
     
 
@@ -141,6 +142,8 @@ public class ResourcesManager
         platform3_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "platform3.png");
         coin_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameTextureAtlas, activity, "coin.png");
         player_region = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(gameTextureAtlas, activity, "player.png", 3, 1);
+        player2_region = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(gameTextureAtlas, activity, "player.png", 3, 1);
+
 
         try
         {

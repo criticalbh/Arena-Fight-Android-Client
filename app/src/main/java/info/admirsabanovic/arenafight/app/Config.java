@@ -23,7 +23,7 @@ public class Config {
     }
 
     public static void setUpConfig(){
-        setConfig("host", "http://192.168.0.135/");
+        setConfig("host", "http://192.168.0.135:3000");
     }
 
     public static Config INSTANCE = new Config();

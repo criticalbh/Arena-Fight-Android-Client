@@ -35,7 +35,7 @@ public class Fixture {
 	 * Constructs a new fixture
 	 * @param addr the address of the fixture
 	 */
-	protected Fixture (Body body, long addr) {
+	public Fixture(Body body, long addr) {
 		this.body = body;
 		this.addr = addr;
 	}

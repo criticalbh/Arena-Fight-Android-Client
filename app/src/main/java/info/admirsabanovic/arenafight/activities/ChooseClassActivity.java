@@ -55,7 +55,7 @@ public class ChooseClassActivity extends Activity {
     }
 
     private void goToHome(int u_class){
-        Intent intent = new Intent(this, HomeActivity.class);
+        Intent intent = new Intent(this, GameActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION);
         obj.remove("class");
         try {

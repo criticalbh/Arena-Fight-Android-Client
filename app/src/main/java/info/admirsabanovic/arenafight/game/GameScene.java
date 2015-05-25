@@ -9,6 +9,7 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
+import com.github.nkzawa.emitter.Emitter;
 
 import org.andengine.engine.camera.hud.HUD;
 import org.andengine.engine.handler.timer.ITimerCallback;
@@ -34,9 +35,16 @@ import org.andengine.util.level.EntityLoader;
 import org.andengine.util.level.constants.LevelConstants;
 import org.andengine.util.level.simple.SimpleLevelEntityLoaderData;
 import org.andengine.util.level.simple.SimpleLevelLoader;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.xml.sax.Attributes;
 
 import java.io.IOException;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import info.admirsabanovic.arenafight.tcp.SocketIO;
 
 /**
  * Created by asabanovic on 5/15/15.
@@ -58,23 +66,58 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
     private PhysicsWorld physicsWorld;
 
     private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLAYER = "player";
-
+    private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLAYER2 = "player2";
     private Player player;
+    private Player player2;
     private boolean firstTouch = false;
 
     private Text gameOverText;
+    private Text teamMateDeadText;
     private boolean gameOverDisplayed = false;
+    private boolean teamMateDeadDisplay = false;
+    private boolean ifFirst = false;
+    private boolean firstCame = false;
+    private boolean thisIsSecond;
+
+    private AtomicBoolean myBoolean;
+
+    private void signals(){
+        SocketIO.getInstance().on("firstPlayer", new Emitter.Listener() {
+            @Override
+            public void call(final Object... args) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        firstCame = true;
+                        JSONObject data = (JSONObject) args[0];
+                        try {
+                            boolean first_login = data.getBoolean("first");
+                            myBoolean.set(first_login);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                }).start();
+            }
+        });
+    }
 
 
 
     @Override
     public void createScene() {
+        myBoolean =  new AtomicBoolean(false);
+        SocketIO.getInstance().emit("checkFirst");
+        signals();
+        while(firstCame == false){}
         setBackground(new Background(Color.BLUE));
         createHUD();
         createPhysics();
         loadLevel(1);
         createGameOverText();
         setOnSceneTouchListener(this);
+
     }
 
     @Override
@@ -101,6 +144,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
     private void createGameOverText()
     {
         gameOverText = new Text(0, 0, resourcesManager.font, "Game Over!", vbom);
+        teamMateDeadText = new Text(0, 0, resourcesManager.font, "Team Mate Dead!", vbom);
     }
 
     private void displayGameOverText()
@@ -111,7 +155,20 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
         gameOverDisplayed = true;
     }
 
+    private void displayTeamMateDeadText()
+    {
+        teamMateDeadText.setPosition(camera.getCenterX(), camera.getCenterY());
 
+        attachChild(teamMateDeadText);
+        engine.registerUpdateHandler(new TimerHandler(0.9f, new ITimerCallback() {
+            public void onTimePassed(final TimerHandler pTimerHandler) {
+                pTimerHandler.reset();
+                engine.unregisterUpdateHandler(pTimerHandler);
+                detachChild(teamMateDeadText);
+            }
+        }));
+        teamMateDeadDisplay = true;
+    }
 
     private void createHUD(){
         gameHUD = new HUD();
@@ -158,46 +215,35 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
             }
         });
 
-        levelLoader.registerEntityLoader(new EntityLoader<SimpleLevelEntityLoaderData>(TAG_ENTITY)
-        {
-            public IEntity onLoadEntity(final String pEntityName, final IEntity pParent, final Attributes pAttributes, final SimpleLevelEntityLoaderData pSimpleLevelEntityLoaderData) throws IOException
-            {
+        levelLoader.registerEntityLoader(new EntityLoader<SimpleLevelEntityLoaderData>(TAG_ENTITY) {
+            public IEntity onLoadEntity(final String pEntityName, final IEntity pParent, final Attributes pAttributes, final SimpleLevelEntityLoaderData pSimpleLevelEntityLoaderData) throws IOException {
                 final int x = SAXUtils.getIntAttributeOrThrow(pAttributes, TAG_ENTITY_ATTRIBUTE_X);
                 final int y = SAXUtils.getIntAttributeOrThrow(pAttributes, TAG_ENTITY_ATTRIBUTE_Y);
                 final String type = SAXUtils.getAttributeOrThrow(pAttributes, TAG_ENTITY_ATTRIBUTE_TYPE);
 
                 final Sprite levelObject;
 
-                if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM1))
-                {
+
+                if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM1)) {
                     levelObject = new Sprite(x, y, resourcesManager.platform1_region, vbom);
                     PhysicsFactory.createBoxBody(physicsWorld, levelObject, BodyDef.BodyType.StaticBody, FIXTURE_DEF).setUserData("platform1");
-                }
-                else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM2))
-                {
+                } else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM2)) {
                     levelObject = new Sprite(x, y, resourcesManager.platform2_region, vbom);
                     final Body body = PhysicsFactory.createBoxBody(physicsWorld, levelObject, BodyDef.BodyType.StaticBody, FIXTURE_DEF);
                     body.setUserData("platform2");
                     physicsWorld.registerPhysicsConnector(new PhysicsConnector(levelObject, body, true, false));
-                }
-                else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM3))
-                {
+                } else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM3)) {
                     levelObject = new Sprite(x, y, resourcesManager.platform3_region, vbom);
                     final Body body = PhysicsFactory.createBoxBody(physicsWorld, levelObject, BodyDef.BodyType.StaticBody, FIXTURE_DEF);
                     body.setUserData("platform3");
                     physicsWorld.registerPhysicsConnector(new PhysicsConnector(levelObject, body, true, false));
-                }
-                else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_COIN))
-                {
-                    levelObject = new Sprite(x, y, resourcesManager.coin_region, vbom)
-                    {
+                } else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_COIN)) {
+                    levelObject = new Sprite(x, y, resourcesManager.coin_region, vbom) {
                         @Override
-                        protected void onManagedUpdate(float pSecondsElapsed)
-                        {
+                        protected void onManagedUpdate(float pSecondsElapsed) {
                             super.onManagedUpdate(pSecondsElapsed);
 
-                            if (player.collidesWith(this))
-                            {
+                            if (player.collidesWith(this) || player2.collidesWith(this)) {
                                 addToScore(10);
                                 this.setVisible(false);
                                 this.setIgnoreUpdate(true);
@@ -205,24 +251,47 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
                         }
                     };
                     levelObject.registerEntityModifier(new LoopEntityModifier(new ScaleModifier(1, 1, 1.3f)));
-                }
-                else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLAYER))
-                {
-                    player = new Player(x, y, vbom, camera, physicsWorld)
-                    {
+                } else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLAYER)) {
+                    player = new Player(x, y, vbom, camera, physicsWorld, "player", myBoolean.get()) {
                         @Override
-                        public void onDie()
-                        {
-                            if (!gameOverDisplayed)
-                            {
-                                displayGameOverText();
+                        public void onDie() {
+                            if (myBoolean.get() == true) {
+                                if (!gameOverDisplayed) {
+                                    displayGameOverText();
+                                }
+                            } else {
+                                if (!teamMateDeadDisplay) {
+                                    displayTeamMateDeadText();
+                                }
                             }
                         }
                     };
+                    thisIsSecond = !myBoolean.get();
                     levelObject = player;
-                }
-                else
-                {
+                } else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLAYER2)) {
+                    player2 = new Player(x, y, vbom, camera, physicsWorld, "player2", thisIsSecond) {
+                        @Override
+                        public void onDie() {
+                            if (ifFirst == false) {
+                                if (!gameOverDisplayed) {
+                                    displayGameOverText();
+                                }
+                            } else {
+                                if (!teamMateDeadDisplay) {
+                                    displayTeamMateDeadText();
+                                }
+                            }
+                        }
+                    };
+//                    engine.registerUpdateHandler(new TimerHandler(2.0f, new ITimerCallback() {
+//                        public void onTimePassed(final TimerHandler pTimerHandler) {
+//                            pTimerHandler.reset();
+//                            unregisterUpdateHandler(pTimerHandler);
+//                            SocketIO.getInstance().emit("updatePosition", player2.getX(), player2.getY());
+//                        }
+//                    }));
+                    levelObject = player2;
+                } else {
                     throw new IllegalArgumentException();
                 }
 
@@ -235,18 +304,30 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
         levelLoader.loadLevelFromAsset(activity.getAssets(), "level/" + levelID + ".lvl");
     }
 
+
     @Override
     public boolean onSceneTouchEvent(Scene pScene, TouchEvent pSceneTouchEvent) {
         if (pSceneTouchEvent.isActionDown())
         {
             if (!firstTouch)
             {
-                player.setRunning();
+                if(myBoolean.get() == true){
+                    player.setRunning();
+                }else{
+                    player2.setRunning();
+                }
+
                 firstTouch = true;
+                SocketIO.getInstance().emit("player_running");
             }
             else
             {
-                player.jump();
+                SocketIO.getInstance().emit("player_jump");
+                if(myBoolean.get() == true){
+                    player.jump();
+                }else{
+                    player2.jump();
+                }
             }
         }
         return false;
@@ -261,18 +342,31 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
                 final Fixture x1 = contact.getFixtureA();
                 final Fixture x2 = contact.getFixtureB();
 
+//                if(x1.getBody().getUserData()!=null && x2.getBody().getUserData() !=null){
+//                    if((x2.getBody().getUserData().equals("player") && x1.getBody().getUserData().equals("player2")) ||
+//                            (x1.getBody().getUserData().equals("player") && x2.getBody().getUserData().equals("player2"))
+//                            ){
+//
+//                        x1.setSensor(true);
+//                        x2.setSensor(true);
+//                    }
+//                } not working :(
                 if (x1.getBody().getUserData() != null && x2.getBody().getUserData() != null)
                 {
                     if (x2.getBody().getUserData().equals("player"))
                     {
                         player.increaseFootContacts();
                     }
+                    if (x2.getBody().getUserData().equals("player2"))
+                    {
+                        player2.increaseFootContacts();
+                    }
                 }
-                if (x1.getBody().getUserData().equals("platform3") && x2.getBody().getUserData().equals("player"))
+                if (x1.getBody().getUserData().equals("platform3") && (x2.getBody().getUserData().equals("player") || (x2.getBody().getUserData().equals("player2")) ) )
                 {
                     x1.getBody().setType(BodyDef.BodyType.DynamicBody);
                 }
-                if (x1.getBody().getUserData().equals("platform2") && x2.getBody().getUserData().equals("player"))
+                if (x1.getBody().getUserData().equals("platform2") && (x2.getBody().getUserData().equals("player") || (x2.getBody().getUserData().equals("player2")) ))
                 {
                     engine.registerUpdateHandler(new TimerHandler(0.2f, new ITimerCallback() {
                         public void onTimePassed(final TimerHandler pTimerHandler) {
@@ -294,6 +388,10 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
                     if (x2.getBody().getUserData().equals("player"))
                     {
                         player.decreaseFootContacts();
+                    }
+                    if (x2.getBody().getUserData().equals("player2"))
+                    {
+                        player2.decreaseFootContacts();
                     }
                 }
             }

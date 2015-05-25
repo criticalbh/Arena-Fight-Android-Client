@@ -5,8 +5,10 @@
     <entity x="400" y="200" type="platform3"/>
     <entity x="550" y="300" type="platform2"/>
     <entity x="720" y="240" type="platform3"/>
+    <entity x="100" y="300" type="platform1"/>
     <entity x="400" y="270" type="coin"/>
     <entity x="500" y="400" type="coin"/>
     <entity x="600" y="400" type="coin"/>
     <entity x="60" y="140" type="player"/>
+    <entity x="60" y="340" type="player2"/>
 </level>
