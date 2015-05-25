@@ -105,6 +105,11 @@ public abstract class Player extends AnimatedSprite {
         });
     }
 
+    public void stopMoving(){
+        canRun = false;
+        body.setLinearVelocity(new Vector2(0, 0));
+    }
+
 
     public void increaseFootContacts()
     {

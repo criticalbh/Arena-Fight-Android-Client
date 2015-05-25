@@ -17,10 +17,13 @@ import org.andengine.engine.handler.timer.TimerHandler;
 import org.andengine.entity.IEntity;
 import org.andengine.entity.modifier.LoopEntityModifier;
 import org.andengine.entity.modifier.ScaleModifier;
-import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.scene.IOnSceneTouchListener;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
+import org.andengine.entity.scene.menu.MenuScene;
+import org.andengine.entity.scene.menu.item.IMenuItem;
+import org.andengine.entity.scene.menu.item.SpriteMenuItem;
+import org.andengine.entity.scene.menu.item.decorator.ScaleMenuItemDecorator;
 import org.andengine.entity.sprite.AnimatedSprite;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.text.Text;
@@ -42,8 +45,6 @@ import org.json.JSONObject;
 import org.xml.sax.Attributes;
 
 import java.io.IOException;
-import java.net.Socket;
-import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import info.admirsabanovic.arenafight.tcp.SocketIO;
@@ -51,7 +52,7 @@ import info.admirsabanovic.arenafight.tcp.SocketIO;
 /**
  * Created by asabanovic on 5/15/15.
  */
-public class GameScene extends BaseScene implements IOnSceneTouchListener {
+public class GameScene extends BaseScene implements IOnSceneTouchListener, MenuScene.IOnMenuItemClickListener {
     private static final String TAG_ENTITY = "entity";
     private static final String TAG_ENTITY_ATTRIBUTE_X = "x";
     private static final String TAG_ENTITY_ATTRIBUTE_Y = "y";
@@ -60,7 +61,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
     private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM1 = "platform1";
     private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM2 = "platform2";
     private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM3 = "platform3";
+    private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM4 = "platform4";
     private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_COIN = "coin";
+    private static final Object TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_DEMON = "demon";
 
     private HUD gameHUD;
     private Text scoreText;
@@ -75,6 +78,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 
     private Text gameOverText;
     private Text teamMateDeadText;
+    private Text nextLevel;
     private boolean gameOverDisplayed = false;
     private boolean teamMateDeadDisplay = false;
     private boolean ifFirst = false;
@@ -84,7 +88,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
     //life saver
     private AtomicBoolean myBoolean;
 
-    private void signals(){
+    private void signals() {
         SocketIO.getInstance().on("firstPlayer", new Emitter.Listener() {
             @Override
             public void call(final Object... args) {
@@ -104,16 +108,33 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
                 }).start();
             }
         });
-    }
 
+        SocketIO.getInstance().on("bulletShotResponse", new Emitter.Listener() {
+            @Override
+            public void call(final Object... args) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        JSONObject data = (JSONObject) args[0];
+                        try {
+                            boolean first_login = data.getBoolean("first");
+                            spawnBullet(first_login);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+            }
+        });
+    }
 
 
     @Override
     public void createScene() {
-        myBoolean =  new AtomicBoolean(false);
+        myBoolean = new AtomicBoolean(false);
         SocketIO.getInstance().emit("checkFirst");
         signals();
-        while(firstCame == false){}
+        while (firstCame == false) {}
         setBackground(new Background(Color.BLUE));
         createHUD();
         createPhysics();
@@ -123,8 +144,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
     }
 
     @Override
-    public void onBackKeyPressed()
-    {
+    public void onBackKeyPressed() {
         SceneManager.getInstance().loadMenuScene(engine);
     }
 
@@ -140,22 +160,30 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
         camera.setChaseEntity(null);
     }
 
-    private void createGameOverText()
-    {
+    private void createGameOverText() {
         gameOverText = new Text(0, 0, resourcesManager.font, "Game Over!", vbom);
         teamMateDeadText = new Text(0, 0, resourcesManager.font, "Team Mate Dead!", vbom);
+        nextLevel = new Text(0, 0, resourcesManager.font, "Congratulations.. :)", vbom);
     }
 
-    private void displayGameOverText()
-    {
+    private void displayGameOverText() {
         camera.setChaseEntity(null);
         gameOverText.setPosition(camera.getCenterX(), camera.getCenterY());
         attachChild(gameOverText);
         gameOverDisplayed = true;
     }
 
-    private void displayTeamMateDeadText()
-    {
+    private void nextLevelDisplayText() {
+        player.stopAnimation();
+        player2.stopAnimation();
+        player.stopMoving();
+        player2.stopMoving();
+        nextLevel.setPosition(camera.getCenterX(), camera.getCenterY());
+
+        attachChild(nextLevel);
+    }
+
+    private void displayTeamMateDeadText() {
         teamMateDeadText.setPosition(camera.getCenterX(), camera.getCenterY());
 
         attachChild(teamMateDeadText);
@@ -169,54 +197,85 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
         teamMateDeadDisplay = true;
     }
 
-    private void createHUD(){
-        final Rectangle right = new Rectangle(720, 200, 60, 60, vbom)
-        {
-            public boolean onAreaTouched(TouchEvent touchEvent, float X, float Y)
-            {
-                if (touchEvent.isActionUp())
-                {
-                    spawnBullet();
+    private void createHUD() {
+        final Sprite fireButton = new Sprite(700, 200, 60, 60, resourcesManager.fireButtonRegion, vbom) {
+            public boolean onAreaTouched(TouchEvent touchEvent, float x, float y) {
+                if (touchEvent.isActionUp()) {
+                    SocketIO.getInstance().emit("bulletShot", myBoolean.get());
+                    spawnBullet(myBoolean.get());
                 }
                 return true;
-            };
+            }
+
+            ;
         };
         gameHUD = new HUD();
 
         // CREATE SCORE TEXT
-        scoreText = new Text(50, 420, resourcesManager.font, "Score: 0123456789", new TextOptions(HorizontalAlign.LEFT), vbom);
+        scoreText = new Text(70, 420, resourcesManager.font, "Score: 0123456789", new TextOptions(HorizontalAlign.LEFT), vbom);
         scoreText.setText("Score: 0");
         gameHUD.attachChild(scoreText);
 
-        gameHUD.registerTouchArea(right);
-        gameHUD.attachChild(right);
+        gameHUD.registerTouchArea(fireButton);
+        gameHUD.attachChild(fireButton);
         camera.setHUD(gameHUD);
     }
 
+    private AtomicBoolean resetFlag = new AtomicBoolean(false);
 
-    private void addToScore(int i)
-    {
+    private void createRestartMenu() {
+        if (!resetFlag.get()) {
+            SocketIO.getInstance().emit("resetFirstPlayer");
+            resetFlag.set(true);
+        }
+        resourcesManager.loadMenuResources();
+        MenuScene menuChildScene = new MenuScene(camera);
+        menuChildScene.setPosition(0, 0);
+
+        final IMenuItem playMenuItem = new ScaleMenuItemDecorator(new SpriteMenuItem(0, resourcesManager.play_region, vbom), 1.2f, 1);
+
+        menuChildScene.addMenuItem(playMenuItem);
+
+        menuChildScene.buildAnimations();
+        menuChildScene.setBackgroundEnabled(false);
+
+        playMenuItem.setPosition(playMenuItem.getX(), playMenuItem.getY() - 120);
+
+        menuChildScene.setOnMenuItemClickListener(this);
+
+        setChildScene(menuChildScene);
+    }
+
+    public boolean onMenuItemClicked(MenuScene pMenuScene, IMenuItem pMenuItem, float pMenuItemLocalX, float pMenuItemLocalY) {
+        switch (pMenuItem.getID()) {
+            case 0:
+                resourcesManager.unloadMenuTextures();
+                resetFlag.set(false);
+                SceneManager.getInstance().loadGameScene(engine);
+            default:
+                return false;
+        }
+    }
+
+
+    private void addToScore(int i) {
         score += i;
         scoreText.setText("Score: " + score);
     }
 
-    private void createPhysics()
-    {
+    private void createPhysics() {
         physicsWorld = new FixedStepPhysicsWorld(60, new Vector2(0, -17), false);
         physicsWorld.setContactListener(contactListener());
         registerUpdateHandler(physicsWorld);
     }
 
-    private void loadLevel(int levelID)
-    {
+    private void loadLevel(int levelID) {
         final SimpleLevelLoader levelLoader = new SimpleLevelLoader(vbom);
 
         final FixtureDef FIXTURE_DEF = PhysicsFactory.createFixtureDef(0, 0.01f, 0.5f);
 
-        levelLoader.registerEntityLoader(new EntityLoader<SimpleLevelEntityLoaderData>(LevelConstants.TAG_LEVEL)
-        {
-            public IEntity onLoadEntity(final String pEntityName, final IEntity pParent, final Attributes pAttributes, final SimpleLevelEntityLoaderData pSimpleLevelEntityLoaderData) throws IOException
-            {
+        levelLoader.registerEntityLoader(new EntityLoader<SimpleLevelEntityLoaderData>(LevelConstants.TAG_LEVEL) {
+            public IEntity onLoadEntity(final String pEntityName, final IEntity pParent, final Attributes pAttributes, final SimpleLevelEntityLoaderData pSimpleLevelEntityLoaderData) throws IOException {
                 final int width = SAXUtils.getIntAttributeOrThrow(pAttributes, LevelConstants.TAG_LEVEL_ATTRIBUTE_WIDTH);
                 final int height = SAXUtils.getIntAttributeOrThrow(pAttributes, LevelConstants.TAG_LEVEL_ATTRIBUTE_HEIGHT);
 
@@ -249,6 +308,28 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
                     final Body body = PhysicsFactory.createBoxBody(physicsWorld, levelObject, BodyDef.BodyType.StaticBody, FIXTURE_DEF);
                     body.setUserData("platform3");
                     physicsWorld.registerPhysicsConnector(new PhysicsConnector(levelObject, body, true, false));
+                }else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_DEMON)) {
+                    levelObject = new Sprite(x, y, resourcesManager.demon_region, vbom){
+                        @Override
+                        protected void onManagedUpdate(float pSecondsElapsed) {
+                            super.onManagedUpdate(pSecondsElapsed);
+                            if (bulletShooted) {
+                                if (mBulletSprite.collidesWith(this)) {
+                                    addToScore(25);
+                                    this.setVisible(false);
+                                    this.setIgnoreUpdate(true);
+                                }
+                            }
+                        }
+                    };
+                    final Body body = PhysicsFactory.createBoxBody(physicsWorld, levelObject, BodyDef.BodyType.DynamicBody, FIXTURE_DEF);
+                    body.setUserData("demon");
+                    physicsWorld.registerPhysicsConnector(new PhysicsConnector(levelObject, body, true, false));
+                } else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_PLATFORM4)) {
+                    levelObject = new Sprite(x, y, resourcesManager.platform1_region, vbom);
+                    final Body body = PhysicsFactory.createBoxBody(physicsWorld, levelObject, BodyDef.BodyType.StaticBody, FIXTURE_DEF);
+                    body.setUserData("platform4");
+                    physicsWorld.registerPhysicsConnector(new PhysicsConnector(levelObject, body, true, false));
                 } else if (type.equals(TAG_ENTITY_ATTRIBUTE_TYPE_VALUE_COIN)) {
                     levelObject = new Sprite(x, y, resourcesManager.coin_region, vbom) {
                         @Override
@@ -260,8 +341,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
                                 this.setVisible(false);
                                 this.setIgnoreUpdate(true);
                             }
-                            if(bulletShooted){
-                                if(mBulletSprite.collidesWith(this)){
+                            if (bulletShooted) {
+                                if (mBulletSprite.collidesWith(this)) {
+                                    addToScore(5);
                                     this.setVisible(false);
                                     this.setIgnoreUpdate(true);
                                 }
@@ -282,6 +364,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
                                     displayTeamMateDeadText();
                                 }
                             }
+                            createRestartMenu();
                         }
                     };
                     thisIsSecond = !myBoolean.get();
@@ -299,15 +382,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
                                     displayTeamMateDeadText();
                                 }
                             }
+                            createRestartMenu();
                         }
                     };
-//                    engine.registerUpdateHandler(new TimerHandler(2.0f, new ITimerCallback() {
-//                        public void onTimePassed(final TimerHandler pTimerHandler) {
-//                            pTimerHandler.reset();
-//                            unregisterUpdateHandler(pTimerHandler);
-//                            SocketIO.getInstance().emit("updatePosition", player2.getX(), player2.getY());
-//                        }
-//                    }));
                     levelObject = player2;
                 } else {
                     throw new IllegalArgumentException();
@@ -321,12 +398,20 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 
         levelLoader.loadLevelFromAsset(activity.getAssets(), "level/" + levelID + ".lvl");
     }
+
     AnimatedSprite mBulletSprite;
     private boolean bulletShooted = false;
-    public void spawnBullet(){
+
+    public void spawnBullet(boolean whichPlayer) {
         bulletShooted = true;
-        mBulletSprite = new AnimatedSprite(player2.getX(), player2.getY() + player2.getHeight() / 4,
-                ResourcesManager.getInstance().bullet, vbom);
+        if (whichPlayer)
+            mBulletSprite = new AnimatedSprite(player.getX(), player.getY() + player.getHeight() / 4,
+                    ResourcesManager.getInstance().bullet, vbom);
+        else
+            mBulletSprite = new AnimatedSprite(player2.getX(), player2.getY() + player2.getHeight() / 4,
+                    ResourcesManager.getInstance().bullet, vbom);
+
+
         final FixtureDef FIXTURE_DEF = PhysicsFactory.createFixtureDef(0, 0.01f, 0.5f);
 
         Body mBulletBody = PhysicsFactory.createCircleBody(physicsWorld, mBulletSprite, BodyDef.BodyType.DynamicBody, FIXTURE_DEF);
@@ -343,26 +428,22 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 
     @Override
     public boolean onSceneTouchEvent(Scene pScene, TouchEvent pSceneTouchEvent) {
-        if (pSceneTouchEvent.isActionDown())
-        {
+        if (pSceneTouchEvent.isActionDown()) {
 
-            if (!firstTouch)
-            {
-                if(myBoolean.get() == true){
+            if (!firstTouch) {
+                if (myBoolean.get() == true) {
                     player.setRunning();
-                }else{
+                } else {
                     player2.setRunning();
                 }
 
                 firstTouch = true;
                 SocketIO.getInstance().emit("player_running");
-            }
-            else
-            {
+            } else {
                 SocketIO.getInstance().emit("player_jump");
-                if(myBoolean.get() == true){
+                if (myBoolean.get() == true) {
                     player.jump();
-                }else{
+                } else {
                     player2.jump();
                 }
             }
@@ -370,41 +451,26 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
         return false;
     }
 
-    private ContactListener contactListener()
-    {
-        ContactListener contactListener = new ContactListener()
-        {
-            public void beginContact(Contact contact)
-            {
+    private ContactListener contactListener() {
+        ContactListener contactListener = new ContactListener() {
+            public void beginContact(Contact contact) {
                 final Fixture x1 = contact.getFixtureA();
                 final Fixture x2 = contact.getFixtureB();
-
-//                if(x1.getBody().getUserData()!=null && x2.getBody().getUserData() !=null){
-//                    if((x2.getBody().getUserData().equals("player") && x1.getBody().getUserData().equals("player2")) ||
-//                            (x1.getBody().getUserData().equals("player") && x2.getBody().getUserData().equals("player2"))
-//                            ){
-//
-//                        x1.setSensor(true);
-//                        x2.setSensor(true);
-//                    }
-//                } not working :(
-                if (x1.getBody().getUserData() != null && x2.getBody().getUserData() != null)
-                {
-                    if (x2.getBody().getUserData().equals("player"))
-                    {
+                if (x1.getBody().getUserData() != null && x2.getBody().getUserData() != null) {
+                    if (x2.getBody().getUserData().equals("player")) {
                         player.increaseFootContacts();
                     }
-                    if (x2.getBody().getUserData().equals("player2"))
-                    {
+                    if (x2.getBody().getUserData().equals("player2")) {
                         player2.increaseFootContacts();
                     }
                 }
-                if (x1.getBody().getUserData().equals("platform3") && (x2.getBody().getUserData().equals("player") || (x2.getBody().getUserData().equals("player2")) ) )
-                {
+                if (x1.getBody().getUserData().equals("platform3") && (x2.getBody().getUserData().equals("player") || (x2.getBody().getUserData().equals("player2")))) {
                     x1.getBody().setType(BodyDef.BodyType.DynamicBody);
                 }
-                if (x1.getBody().getUserData().equals("platform2") && (x2.getBody().getUserData().equals("player") || (x2.getBody().getUserData().equals("player2")) ))
-                {
+                if (x1.getBody().getUserData().equals("platform4") && (x2.getBody().getUserData().equals("player") || (x2.getBody().getUserData().equals("player2")))) {
+                    nextLevelDisplayText();
+                }
+                if (x1.getBody().getUserData().equals("platform2") && (x2.getBody().getUserData().equals("player") || (x2.getBody().getUserData().equals("player2")))) {
                     engine.registerUpdateHandler(new TimerHandler(0.2f, new ITimerCallback() {
                         public void onTimePassed(final TimerHandler pTimerHandler) {
                             pTimerHandler.reset();
@@ -415,31 +481,25 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
                 }
             }
 
-            public void endContact(Contact contact)
-            {
+            public void endContact(Contact contact) {
                 final Fixture x1 = contact.getFixtureA();
                 final Fixture x2 = contact.getFixtureB();
 
-                if (x1.getBody().getUserData() != null && x2.getBody().getUserData() != null)
-                {
-                    if (x2.getBody().getUserData().equals("player"))
-                    {
+                if (x1.getBody().getUserData() != null && x2.getBody().getUserData() != null) {
+                    if (x2.getBody().getUserData().equals("player")) {
                         player.decreaseFootContacts();
                     }
-                    if (x2.getBody().getUserData().equals("player2"))
-                    {
+                    if (x2.getBody().getUserData().equals("player2")) {
                         player2.decreaseFootContacts();
                     }
                 }
             }
 
-            public void preSolve(Contact contact, Manifold oldManifold)
-            {
+            public void preSolve(Contact contact, Manifold oldManifold) {
 
             }
 
-            public void postSolve(Contact contact, ContactImpulse impulse)
-            {
+            public void postSolve(Contact contact, ContactImpulse impulse) {
 
             }
         };

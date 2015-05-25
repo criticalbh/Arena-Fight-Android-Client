@@ -29,8 +29,8 @@ public class GameActivity extends BaseGameActivity
 
     public EngineOptions onCreateEngineOptions()
     {
-        camera = new BoundCamera(0, 0, 800, 480);
-        EngineOptions engineOptions = new EngineOptions(true, ScreenOrientation.LANDSCAPE_FIXED, new RatioResolutionPolicy(800, 480), this.camera);
+        camera = new BoundCamera(0, 0, 855, 480);
+        EngineOptions engineOptions = new EngineOptions(true, ScreenOrientation.LANDSCAPE_FIXED, new RatioResolutionPolicy(855, 480), this.camera);
         engineOptions.getAudioOptions().setNeedsMusic(true).setNeedsSound(true);
         engineOptions.setWakeLockOptions(WakeLockOptions.SCREEN_ON);
         return engineOptions;

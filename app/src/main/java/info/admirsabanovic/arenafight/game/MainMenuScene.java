@@ -58,16 +58,13 @@ public class MainMenuScene extends BaseScene implements MenuScene.IOnMenuItemCli
         menuChildScene.setPosition(0, 0);
 
         final IMenuItem playMenuItem = new ScaleMenuItemDecorator(new SpriteMenuItem(MENU_PLAY, resourcesManager.play_region, vbom), 1.2f, 1);
-        final IMenuItem optionsMenuItem = new ScaleMenuItemDecorator(new SpriteMenuItem(MENU_OPTIONS, resourcesManager.options_region, vbom), 1.2f, 1);
 
         menuChildScene.addMenuItem(playMenuItem);
-        menuChildScene.addMenuItem(optionsMenuItem);
 
         menuChildScene.buildAnimations();
         menuChildScene.setBackgroundEnabled(false);
 
-        playMenuItem.setPosition(playMenuItem.getX(), playMenuItem.getY() + 50);
-        optionsMenuItem.setPosition(optionsMenuItem.getX(), optionsMenuItem.getY() - 110);
+        playMenuItem.setPosition(playMenuItem.getX(), playMenuItem.getY() -120);
 
         menuChildScene.setOnMenuItemClickListener(this);
 
@@ -80,8 +77,6 @@ public class MainMenuScene extends BaseScene implements MenuScene.IOnMenuItemCli
         {
             case MENU_PLAY:
                 SceneManager.getInstance().loadGameScene(engine);
-            case MENU_OPTIONS:
-                return true;
             default:
                 return false;
         }
