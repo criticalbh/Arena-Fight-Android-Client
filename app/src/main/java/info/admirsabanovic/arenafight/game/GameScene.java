@@ -17,9 +17,11 @@ import org.andengine.engine.handler.timer.TimerHandler;
 import org.andengine.entity.IEntity;
 import org.andengine.entity.modifier.LoopEntityModifier;
 import org.andengine.entity.modifier.ScaleModifier;
+import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.scene.IOnSceneTouchListener;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
+import org.andengine.entity.sprite.AnimatedSprite;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.text.Text;
 import org.andengine.entity.text.TextOptions;
@@ -79,6 +81,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
     private boolean firstCame = false;
     private boolean thisIsSecond;
 
+    //life saver
     private AtomicBoolean myBoolean;
 
     private void signals(){
@@ -117,7 +120,6 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
         loadLevel(1);
         createGameOverText();
         setOnSceneTouchListener(this);
-
     }
 
     @Override
@@ -136,9 +138,6 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
         camera.setHUD(null);
         camera.setCenter(400, 240);
         camera.setChaseEntity(null);
-
-        // TODO code responsible for disposing scene
-        // removing all game scene objects.
     }
 
     private void createGameOverText()
@@ -171,6 +170,17 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
     }
 
     private void createHUD(){
+        final Rectangle right = new Rectangle(720, 200, 60, 60, vbom)
+        {
+            public boolean onAreaTouched(TouchEvent touchEvent, float X, float Y)
+            {
+                if (touchEvent.isActionUp())
+                {
+                    spawnBullet();
+                }
+                return true;
+            };
+        };
         gameHUD = new HUD();
 
         // CREATE SCORE TEXT
@@ -178,6 +188,8 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
         scoreText.setText("Score: 0");
         gameHUD.attachChild(scoreText);
 
+        gameHUD.registerTouchArea(right);
+        gameHUD.attachChild(right);
         camera.setHUD(gameHUD);
     }
 
@@ -248,6 +260,12 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
                                 this.setVisible(false);
                                 this.setIgnoreUpdate(true);
                             }
+                            if(bulletShooted){
+                                if(mBulletSprite.collidesWith(this)){
+                                    this.setVisible(false);
+                                    this.setIgnoreUpdate(true);
+                                }
+                            }
                         }
                     };
                     levelObject.registerEntityModifier(new LoopEntityModifier(new ScaleModifier(1, 1, 1.3f)));
@@ -303,12 +321,31 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 
         levelLoader.loadLevelFromAsset(activity.getAssets(), "level/" + levelID + ".lvl");
     }
+    AnimatedSprite mBulletSprite;
+    private boolean bulletShooted = false;
+    public void spawnBullet(){
+        bulletShooted = true;
+        mBulletSprite = new AnimatedSprite(player2.getX(), player2.getY() + player2.getHeight() / 4,
+                ResourcesManager.getInstance().bullet, vbom);
+        final FixtureDef FIXTURE_DEF = PhysicsFactory.createFixtureDef(0, 0.01f, 0.5f);
 
+        Body mBulletBody = PhysicsFactory.createCircleBody(physicsWorld, mBulletSprite, BodyDef.BodyType.DynamicBody, FIXTURE_DEF);
+        mBulletBody.setUserData("metak");
+
+        mBulletBody.setBullet(true);
+
+        physicsWorld.registerPhysicsConnector(new PhysicsConnector(mBulletSprite, mBulletBody, true, true));
+        mBulletSprite.setUserData("metak");
+        mBulletBody.setLinearVelocity(1 * 20, 0);
+
+        attachChild(mBulletSprite);
+    }
 
     @Override
     public boolean onSceneTouchEvent(Scene pScene, TouchEvent pSceneTouchEvent) {
         if (pSceneTouchEvent.isActionDown())
         {
+
             if (!firstTouch)
             {
                 if(myBoolean.get() == true){

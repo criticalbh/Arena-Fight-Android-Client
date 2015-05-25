@@ -6,6 +6,7 @@ import com.github.nkzawa.emitter.Emitter;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import info.admirsabanovic.arenafight.activities.GameActivity;
 import info.admirsabanovic.arenafight.activities.HomeActivity;
 
 /**
@@ -37,7 +38,7 @@ public class SocketListener {
                         try {
                             boolean first_login = data.getBoolean("first_login");
                             if(first_login == false){
-                                EventExecutor.startNewActivityEvent(_context, HomeActivity.class, data);
+                                EventExecutor.startNewActivityEvent(_context, GameActivity.class, data);
                             }else{
                                 EventExecutor.startNewActivityEvent(_context, _newActivity, data);
                             }

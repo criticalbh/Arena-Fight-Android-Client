@@ -26,7 +26,7 @@ import info.admirsabanovic.arenafight.tcp.SocketIO;
 public abstract class Player extends AnimatedSprite {
     public Player(float pX, float pY, VertexBufferObjectManager vbo, Camera camera, PhysicsWorld physicsWorld, String data, Boolean isFirst)
     {
-        super(pX, pY, ResourcesManager.getInstance().player_region, vbo);
+        super(pX, pY, isFirst == true? ResourcesManager.getInstance().player_region : ResourcesManager.getInstance().player2_region, vbo);
         createPhysics(camera, physicsWorld, data);
         First = isFirst;
         if(First == true){

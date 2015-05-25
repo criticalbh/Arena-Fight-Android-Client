@@ -95,6 +95,7 @@ public class SceneManager
         disposeSplashScene();
     }
 
+
     public void loadGameScene(final Engine mEngine)
     {
         setScene(loadingScene);

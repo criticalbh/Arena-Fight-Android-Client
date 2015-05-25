@@ -14,6 +14,7 @@ import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.WakeLockOptions;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.andengine.entity.scene.Scene;
+import org.andengine.input.touch.controller.MultiTouchController;
 import org.andengine.ui.activity.BaseGameActivity;
 
 import java.io.IOException;
@@ -64,6 +65,8 @@ public class GameActivity extends BaseGameActivity
                 SceneManager.getInstance().createMenuScene();
             }
         }));
+        //allowing bullets and jumping in same time
+        mEngine.setTouchController(new MultiTouchController());
         pOnPopulateSceneCallback.onPopulateSceneFinished();
     }
 
