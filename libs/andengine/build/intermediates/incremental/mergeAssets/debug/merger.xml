@@ -1,2 +1,2 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merger version="3"><dataSet config="main"><source path="/home/asabanovic/school/ArenaFight/libs/andengine/assets"/></dataSet><dataSet config="debug"><source path="/home/asabanovic/school/ArenaFight/libs/andengine/src/debug/assets"/></dataSet></merger>
+<merger version="3"><dataSet config="main"><source path="/home/asabanovic/school/Hadji-Arena-Fight-Android-Client/libs/andengine/assets"/></dataSet><dataSet config="debug"><source path="/home/asabanovic/school/Hadji-Arena-Fight-Android-Client/libs/andengine/src/debug/assets"/></dataSet></merger>
